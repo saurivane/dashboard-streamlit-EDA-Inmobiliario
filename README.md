@@ -1,5 +1,7 @@
 # Dashboard Inmobiliario Madrid
 
+🔗 **Ver online:** https://dashboard-app-eda-inmobiliario.streamlit.app/
+
 Dashboard interactivo para visualización y análisis exploratorio de datos de propiedades inmobiliarias en Madrid.
 
 ## 📊 Descripción
@@ -82,11 +84,12 @@ COLORS = {
 
 - **Filtros**: Precio, metros, habitaciones, ubicación
 - **Métricas**: Total propiedades, precio medio, precio/m², metros medios
-- **4 pestañas**:
+- **5 pestañas**:
   - Visión General: Histogramas y distribución
   - Análisis: Correlaciones y scatter plots
   - Detalles: Ubicación, ascensor, planta
   - Datos: Tabla de datos y estadísticas
+  - Conclusiones: Resumen del análisis EDA
 
 ## 📄 Datos
 
