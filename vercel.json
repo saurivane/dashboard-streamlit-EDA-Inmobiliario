@@ -1,7 +1,8 @@
 {
   "buildCommand": "pip install --break-system-packages -r requirements.txt",
-  "outputDirectory": ".",
   "installCommand": "pip install --break-system-packages -r requirements.txt",
+  "outputDirectory": ".",
   "framework": null,
-  "devCommand": "streamlit run app.py --server.port=$PORT"
+  "devCommand": "streamlit run app.py --server.port=$PORT",
+  "startCommand": "streamlit run app.py --server.port=$PORT --server.enableCORS=false --server.enableXsrfProtection=false"
 }
