@@ -1,8 +1,15 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from typing import Tuple
+"""
+Dashboard Inmobiliario de Madrid
+Análisis exploratorio de datos de propiedades en venta
+"""
 
+# Importación de librerías necesarias
+import streamlit as st  # Framework principal para crear la aplicación web
+import pandas as pd     # Manipulación y análisis de datos
+import plotly.express as px  # Creación de gráficos interactivos
+from typing import Tuple  # Tipado para mejorar legibilidad
+
+# Configuración inicial de la página de Streamlit
 st.set_page_config(
     page_title="Dashboard Inmobiliario Madrid",
     page_icon="🏠",
@@ -10,15 +17,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Paleta de colores para mantener consistencia visual en los gráficos
+# Colores basados en tonos verdes para dar sensación de naturaleza/vivienda
 COLORS = {
-    'primary': '#4CAF50',
-    'secondary': '#81C784',
-    'accent': '#A5D6A7',
-    'light': '#C8E6C9',
-    'dark': '#1E1E1E',
-    'text': '#FFFFFF'
+    'primary': '#4CAF50',    # Verde principal
+    'secondary': '#81C784',   # Verde secundario
+    'accent': '#A5D6A7',      # Verde acento
+    'light': '#C8E6C9',      # Verde claro
+    'dark': '#1E1E1E',        # Negro oscuro para fondos
+    'text': '#FFFFFF'        # Blanco para texto
 }
 
+# Estilos CSS personalizados para mejorar la apariencia del dashboard
+# Se aplican estilos al título principal y subtítulo
 st.markdown("""
     <style>
     .main-title {
@@ -37,11 +48,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Configuración de diseño para gráficos de barras y dispersión
+# Define el estilo visual común para mantener coherencia
 LAYOUT_OPTS = dict(
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)',
-    font=dict(color='#FFFFFF', size=12),
-    title_font=dict(size=16, color='#FFFFFF'),
+    paper_bgcolor='rgba(0,0,0,0)',       # Fondo transparente
+    plot_bgcolor='rgba(0,0,0,0)',        # Fondo del gráfico transparente
+    font=dict(color='#FFFFFF', size=12),# Fuente blanca
+    title_font=dict(size=16, color='#FFFFFF'),# Título en blanco
     legend=dict(
         font=dict(color='#FFFFFF', size=11),
         bgcolor='rgba(0,0,0,0)',
@@ -51,7 +64,7 @@ LAYOUT_OPTS = dict(
     xaxis=dict(
         title_font=dict(color='#FFFFFF'),
         tickfont=dict(color='#CCCCCC'),
-        gridcolor='rgba(255,255,255,0.1)'
+        gridcolor='rgba(255,255,255,0.1)'  # Grid sutil
     ),
     yaxis=dict(
         title_font=dict(color='#FFFFFF'),
@@ -60,6 +73,7 @@ LAYOUT_OPTS = dict(
     )
 )
 
+# Configuración específica para gráficos circulares (pie charts)
 PIE_LAYOUT_OPTS = dict(
     paper_bgcolor='rgba(0,0,0,0)',
     font=dict(color='#FFFFFF', size=12),
@@ -72,6 +86,7 @@ PIE_LAYOUT_OPTS = dict(
     )
 )
 
+# Configuración para mapas de correlación
 CORR_LAYOUT_OPTS = dict(
     paper_bgcolor='rgba(0,0,0,0)',
     font=dict(color='#FFFFFF', size=12),
@@ -80,13 +95,40 @@ CORR_LAYOUT_OPTS = dict(
 )
 
 
+# =============================================================================
+# FUNCIONES DE CARGA Y PROCESAMIENTO DE DATOS
+# =============================================================================
+
 @st.cache_data(ttl=3600)
 def load_data(csv_path: str) -> pd.DataFrame:
+    """
+    Carga los datos desde un archivo CSV.
+    
+    Args:
+        csv_path: Ruta al archivo CSV con los datos de propiedades.
+        
+    Returns:
+        DataFrame con los datos cargados.
+        
+    Nota:
+        Utiliza @st.cache_data para evitar recargar los datos en cada interacción.
+        El parámetro ttl=3600 indica que la caché expira después de 1 hora.
+    """
     return pd.read_csv(csv_path)
 
 
 @st.cache_data(ttl=3600)
 def get_filter_options(df: pd.DataFrame) -> Tuple:
+    """
+    Extrae las opciones disponibles para los filtros basándose en los datos.
+    
+    Args:
+        df: DataFrame con los datos de propiedades.
+        
+    Returns:
+        Tupla con los valores mínimos/máximos de precio y metros,
+        y listas de valores únicos para habitaciones, ubicaciones y vendedores.
+    """
     return (
         int(df['precio'].min()),
         int(df['precio'].max()),
@@ -106,6 +148,20 @@ def apply_filters(
     ubicaciones: list,
     vendedor: list
 ) -> pd.DataFrame:
+    """
+    Aplica filtros al DataFrame según los criterios seleccionados por el usuario.
+    
+    Args:
+        df: DataFrame original con todos los datos.
+        precio_range: Rango de precios (mínimo, máximo).
+        metros_range: Rango de metros cuadrados (mínimo, máximo).
+        habitaciones: Lista de habitaciones a incluir.
+        ubicaciones: Lista de ubicaciones a incluir.
+        vendedor: Lista de tipos de vendedor a incluir.
+        
+    Returns:
+        DataFrame filtrado según los criterios especificados.
+    """
     filtered = df[
         (df['precio'] >= precio_range[0]) & 
         (df['precio'] <= precio_range[1]) &
@@ -113,12 +169,15 @@ def apply_filters(
         (df['metros'] <= metros_range[1])
     ]
     
+    # Filtrar por número de habitaciones si se especificaron
     if habitaciones:
         filtered = filtered[filtered['habitaciones'].isin(habitaciones)]
     
+    # Filtrar por ubicación si se especificaron
     if len(ubicaciones) > 0:
         filtered = filtered[filtered['ubicacion'].isin(ubicaciones)]
     
+    # Filtrar por tipo de vendedor si se especificaron
     if vendedor:
         filtered = filtered[filtered['vendedor'].isin(vendedor)]
     
@@ -127,6 +186,15 @@ def apply_filters(
 
 @st.cache_data
 def calculate_metrics(_df: pd.DataFrame) -> Tuple:
+    """
+    Calcula métricas básicas del conjunto de datos filtrado.
+    
+    Args:
+        _df: DataFrame con los datos filtrados.
+        
+    Returns:
+        Tupla con (precio_medio, precio_por_m2, metros_medios).
+    """
     precio_medio = _df['precio'].mean()
     precio_m2 = (_df['precio'] / _df['metros'].replace(0, 1)).mean()
     metros_medios = _df['metros'].mean()
@@ -135,12 +203,39 @@ def calculate_metrics(_df: pd.DataFrame) -> Tuple:
 
 @st.cache_data
 def get_precio_m2(_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Añade una columna calculada con el precio por metro cuadrado.
+    
+    Args:
+        _df: DataFrame con los datos de propiedades.
+        
+    Returns:
+        DataFrame con la columna adicional 'precio_m2'.
+    """
     df_copy = _df.copy()
     df_copy['precio_m2'] = df_copy['precio'] / df_copy['metros'].replace(0, 1)
     return df_copy
 
 
 def get_grouped_stats(_df: pd.DataFrame) -> dict:
+    """
+    Calcula estadísticas agrupadas por diferentes categorías.
+    
+    Args:
+        _df: DataFrame con los datos de propiedades.
+        
+    Returns:
+        Diccionario con múltiples estadísticas agrupadas:
+        - habitacion_count: Conteo por número de habitaciones
+        - precio_hab: Precio medio por habitaciones
+        - ubicacion_count: Top 10 ubicaciones por cantidad
+        - precio_ubicacion: Top 10 precio medio por ubicación
+        - ascensor_counts: Distribución de propiedades con/sin ascensor
+        - planta_counts: Top 10 tipos de planta
+        - vendedor_count: Conteo por tipo de vendedor
+        - precio_vendedor: Precio medio por tipo de vendedor
+        - precio_m2_vendedor: Precio m² medio por tipo de vendedor
+    """
     precio_m2_df = _df.copy()
     precio_m2_df['precio_m2'] = precio_m2_df['precio'] / precio_m2_df['metros'].replace(0, 1)
     
@@ -157,7 +252,23 @@ def get_grouped_stats(_df: pd.DataFrame) -> dict:
     }
 
 
+# =============================================================================
+# FUNCIONES DE RENDERIZADO DE LA INTERFAZ
+# =============================================================================
+
+# Cada función renderiza una sección o pestaña específica del dashboard
+
 def render_metrics(filtered_df: pd.DataFrame):
+    """
+    Renderiza las métricas principales en la parte superior del dashboard.
+    
+    Muestra:
+    - Total de propiedades filtradas
+    - Precio medio
+    - Precio por metro cuadrado
+    - Metros cuadrados medios
+    - Conteo de particulares y agencias
+    """
     precio_medio, precio_m2, metros_medios = calculate_metrics(filtered_df)
     
     col1, col2, col3, col4 = st.columns(4)
@@ -177,6 +288,16 @@ def render_metrics(filtered_df: pd.DataFrame):
 
 
 def render_overview_tab(filtered_df: pd.DataFrame):
+    """
+    Pestaña 'Visión General': Muestra distribuciones generales de los datos.
+    
+    Gráficos incluidos:
+    - Histograma de distribución de precios
+    - Histograma de distribución de metros cuadrados
+    - Boxplot de precio por habitaciones
+    - Gráfico circular de distribución por habitaciones
+    - Comparación particulares vs agencias
+    """
     col_a, col_b = st.columns(2)
     
     with col_a:
@@ -244,6 +365,15 @@ def render_overview_tab(filtered_df: pd.DataFrame):
 
 
 def render_analysis_tab(filtered_df: pd.DataFrame):
+    """
+    Pestaña 'Análisis': Muestra análisis estadísticos y correlaciones.
+    
+    Gráficos incluidos:
+    - Matriz de correlación entre variables numéricas
+    - Scatter plot de precio vs metros con línea de tendencia
+    - Barras de precio medio por habitaciones
+    - Barras de precio m² medio por habitaciones
+    """
     col_e, col_f = st.columns(2)
     
     with col_e:
@@ -295,6 +425,17 @@ def render_analysis_tab(filtered_df: pd.DataFrame):
 
 
 def render_details_tab(filtered_df: pd.DataFrame):
+    """
+    Pestaña 'Detalles': Muestra información detallada por ubicación y características.
+    
+    Gráficos incluidos:
+    - Top 10 propiedades por ubicación
+    - Distribución de ascensor
+    - Precio medio por ubicación
+    - Precio vs número de planta
+    - Precio m² por ubicación
+    - Tipo de planta
+    """
     stats = get_grouped_stats(filtered_df)
     
     col_i, col_j = st.columns(2)
@@ -372,6 +513,16 @@ def render_details_tab(filtered_df: pd.DataFrame):
 
 
 def render_data_tab(filtered_df: pd.DataFrame):
+    """
+    Pestaña 'Datos': Muestra los datos crudos y estadísticas descriptivas.
+    
+    Secciones:
+    - Tabla con los datos filtrados
+    - Estadísticas descriptivas (describe())
+    - Resumen de variables (min, max, media, mediana)
+    - Top 10 propiedades más caras
+    - Top 10 propiedades más económicas
+    """
     st.markdown("### 📋 Datos Filtrados")
     st.dataframe(filtered_df.astype(str), width='stretch', hide_index=True)
     
@@ -410,6 +561,17 @@ def render_data_tab(filtered_df: pd.DataFrame):
 
 
 def render_conclusions_tab(filtered_df: pd.DataFrame):
+    """
+    Pestaña 'Conclusiones': Muestra análisis final y recomendaciones.
+    
+    Secciones:
+    - Análisis de precios (medio, mediano, rango)
+    - Análisis de metros
+    - Comparación particulares vs agencias
+    - Hallazgos clave
+    - Recomendaciones
+    - Distribución de habitaciones
+    """
     st.markdown("## 📈 Conclusiones del Análisis Exploratorio de Datos")
     
     precio_medio = filtered_df['precio'].mean()
@@ -503,22 +665,43 @@ def render_conclusions_tab(filtered_df: pd.DataFrame):
 
 
 def main():
+    """
+    Función principal que orquesta toda la aplicación del dashboard.
+    
+    Flujo de ejecución:
+    1. Carga los datos desde el archivo CSV
+    2. Extrae las opciones disponibles para los filtros
+    3. Genera la barra lateral con los filtros
+    4. Aplica los filtros a los datos
+    5. Renderiza las métricas principales
+    6. Crea las pestañas con diferentes vistas de análisis
+    """
+    # Título principal del dashboard
     st.markdown('<p class="main-title">🏠 Dashboard Inmobiliario - Madrid</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Análisis exploratorio de datos de propiedades en venta</p>', unsafe_allow_html=True)
 
+    # Carga de datos desde archivo CSV
     df = load_data("analisis.csv")
+    
+    # Obtención de las opciones de filtro basadas en los datos
     precio_min, precio_max, metros_min, metros_max, habitaciones_opts, ubicaciones_opts, vendedor_opts = get_filter_options(df)
 
+    # =============================================================================
+    # BARRA LATERAL DE FILTROS
+    # =============================================================================
     with st.sidebar:
         st.markdown("🔍 Filtros")
         st.markdown("---")
         
+        # Inicialización del estado de sesión para el botón de restablecer
         if 'reset_clicked' not in st.session_state:
             st.session_state.reset_clicked = False
         
+        # Botón para restablecer todos los filtros a sus valores por defecto
         if st.button("🔄 Restablecer Filtros", key="reset_btn"):
             st.session_state.reset_clicked = True
         
+        # Si se presionó el botón de restablecer, resetear todos los filtros
         if st.session_state.reset_clicked:
             st.session_state.precio_slider = (precio_min, precio_max)
             st.session_state.metros_slider = (metros_min, metros_max)
@@ -528,6 +711,7 @@ def main():
             st.session_state.reset_clicked = False
             st.rerun()
         
+        # Inicialización de los valores de los filtros en el estado de sesión
         if 'precio_slider' not in st.session_state:
             st.session_state.precio_slider = (precio_min, precio_max)
         if 'metros_slider' not in st.session_state:
@@ -539,6 +723,7 @@ def main():
         if 'vendedor_multiselect' not in st.session_state:
             st.session_state.vendedor_multiselect = list(vendedor_opts)
 
+        # Widgets de filtro en la barra lateral
         st.slider(
             "Rango de precio (€)", 
             precio_min, precio_max, 
@@ -571,13 +756,20 @@ def main():
         
         st.markdown("---")
         
+        # Aplicación de filtros y muestra del conteo de propiedades filtradas
         df_filtered = apply_filters(df, st.session_state.precio_slider, st.session_state.metros_slider, st.session_state.habitaciones_multiselect, st.session_state.ubicacion_multiselect, st.session_state.vendedor_multiselect)
         st.markdown(f'**Propiedades filtradas:** {len(df_filtered)}')
 
+    # Renderizado de métricas principales
     render_metrics(df_filtered)
 
+    # =============================================================================
+    # PESTAÑAS DEL DASHBOARD
+    # =============================================================================
+    # Creación de las 5 pestañas principales del dashboard
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Visión General", "📈 Análisis", "🗺️ Detalles", "📋 Datos", "💡 Conclusiones"])
 
+    # Renderizado del contenido de cada pestaña
     with tab1:
         render_overview_tab(df_filtered)
 
@@ -593,6 +785,7 @@ def main():
     with tab5:
         render_conclusions_tab(df_filtered)
 
+    # Pie de página
     st.markdown("---")
     st.markdown("📊 Dashboard de Análisis Exploratorio de Datos - Propiedades Madrid")
 
