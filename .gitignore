@@ -33,7 +33,7 @@ ENV/
 *.swo
 *~
 
-# Streamlit - keep config.toml
+# Streamlit
 .streamlit/secrets.toml
 
 # OS
