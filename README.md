@@ -18,12 +18,20 @@ Este proyecto es un dashboard desarrollado con **Streamlit** que permite explora
 
 ```
 dashboard_ML/
-├── analisis.csv        # Datos de propiedades
-├── app.py              # Aplicación principal
-├── requirements.txt    # Dependencias
+├── analisis.csv                    # Datos de propiedades
+├── app.py                          # Aplicación principal Streamlit
+├── config.py                       # Configuración de colores
+├── data_loader.py                  # Carga y procesamiento de datos
+├── render.py                       # Funciones de renderizado
+├── generate_powerbi_data.py        # Script para generar datos Power BI
+├── requirements.txt                # Dependencias Python
+├── README.md                       # Este archivo
 ├── .streamlit/
-│   └── config.toml    # Configuración del tema
-└── README.md          # Este archivo
+│   └── config.toml                 # Configuración del tema
+└── powerbi_dashboard/
+    ├── datos_dashboard.xlsx         # Datos para Power BI (14 hojas)
+    ├── Dashboard_PBI_Guia.md       # Guía de Power BI
+    └── Visualizaciones_Guia_Detallada.md
 ```
 
 ## 🚀 Instalación
