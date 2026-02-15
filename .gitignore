@@ -54,3 +54,9 @@ temp/
 
 # Agents skills
 .agents/
+
+# Power BI
+*.pbix
+*.pbit
+*.pbip/
+powerbi_dashboard/unpacked/

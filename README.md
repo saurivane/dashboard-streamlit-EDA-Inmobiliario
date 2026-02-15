@@ -117,3 +117,69 @@ El archivo `analisis.csv` contiene propiedades con los siguientes campos:
 ## 📝 Licencia
 
 MIT License
+
+---
+
+## 📊 Power BI Dashboard
+
+Este proyecto también incluye un dashboard alternativo en **Power BI** con las mismas visualizaciones que el dashboard de Streamlit.
+
+### Archivos
+
+- `powerbi_dashboard/datos_dashboard.xlsx` - Datos procesados (14 hojas)
+- `powerbi_dashboard/Dashboard_PBI_Guia.md` - Guía completa
+- `powerbi_dashboard/Visualizaciones_Guia_Detallada.md` - Detalle de visualizaciones
+
+### Datos Disponibles (14 hojas)
+
+| Hoja | Descripción |
+|------|-------------|
+| Datos_Originales | Datos completos con precio_m2 calculado |
+| Metricas | KPIs principales |
+| Precio_Habitaciones | Precio medio por habitaciones |
+| Distribucion_Habitaciones | Conteo por habitaciones |
+| Precio_Ubicacion | Precio medio por ubicación |
+| Precio_Vendedor | Precio medio por tipo vendedor |
+| Distribucion_Vendedor | Conteo Particular vs Agencia |
+| Distribucion_Ascensor | Conteo con/sin ascensor |
+| Precio_m2_Habitacion | Precio m² medio por habitaciones |
+| Precio_m2_Ubicacion | Precio m² medio por ubicación |
+| Distribucion_Planta | Top 10 tipos de planta |
+| Correlaciones | Matriz de correlación |
+| Top_Caras | Top 10 propiedades más caras |
+| Top_Economicas | Top 10 propiedades más económicas |
+
+### Pasos para Crear el Dashboard
+
+1. **Importar datos**: Abrir Power BI Desktop > Obtener datos > Excel > seleccionar `datos_dashboard.xlsx`
+
+2. **Crear 5 páginas**:
+   - **Visión General**: KPIs, histogramas, gráficos circulares
+   - **Análisis**: Matriz correlación, scatter plots, barras
+   - **Detalles**: Gráficos por ubicación y planta
+   - **Datos**: Tablas de datos y top propiedades
+   - **Conclusiones**: Resumen y comparativas
+
+3. **Crear filtros (Slicers)**:
+   - Rango de precio
+   - Rango de metros
+   - Habitaciones
+   - Ubicación
+   - Tipo de vendedor
+
+4. **Medidas DAX recomendadas**:
+```DAX
+Total Propiedades = COUNTROWS(Datos_Originales)
+Precio Medio = AVERAGE(Datos_Originales[precio])
+Precio m2 Medio = AVERAGE(Datos_Originales[precio_m2])
+Metros Medios = AVERAGE(Datos_Originales[metros])
+```
+
+### Colores
+
+| Elemento | Color |
+|----------|-------|
+| Primary | #4CAF50 (Verde) |
+| Secondary | #2196F3 (Azul) |
+| Light | #E8F5E9 |
+| Background | #FFFFFF |
